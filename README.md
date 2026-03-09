@@ -1,39 +1,58 @@
 # Aziosxjs
 
-A lightweight HTTP client for Node.js inspired by Axios.
+A modern, lightweight HTTP client for Node.js designed for performance, extensibility, and clarity.
 
-Aziosxjs provides a clean and minimal API for making HTTP requests while exposing the internal request pipeline architecture. It is built using Node.js low-level `http` and `https` modules to demonstrate how modern HTTP client libraries work internally.
+Aziosxjs provides a clean API for making HTTP requests while exposing a modular request pipeline architecture.
+It is built directly on Node.js low-level `http` and `https` modules to demonstrate how production-grade HTTP clients work internally.
 
-This project focuses on simplicity, extensibility, and educational value while still providing practical features.
+The goal of this project is to provide a simple but powerful HTTP client that supports advanced features such as retries, caching, request deduplication, and rate limiting.
 
 ---
 
-## Features
+# Features
 
-* Simple and clean API
+### Core HTTP
+
 * Promise-based HTTP requests
-* Built using low-level Node.js `http` and `https` modules
-* Request and response interceptors
-* Structured error system
-* Request cancellation support
-* Query parameter serialization
+* Support for GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
 * Automatic JSON parsing
+* Automatic request body serialization
+* Query parameter serialization
+
+### Request Pipeline
+
+* Request interceptors
+* Response interceptors
+* Structured error system
+* AbortController cancellation support
+
+### Performance Features
+
+* Automatic retry system
+* Exponential backoff strategy
+* Request deduplication (prevents duplicate concurrent requests)
+* Response caching
+* Built-in rate limiting
+
+### Developer Experience
+
 * TypeScript support
 * Modular architecture
+* Lightweight dependency-free implementation
 
 ---
 
-## Installation
+# Installation
 
-```bash
+```bash id="x0c2qz"
 npm install aziosxjs
 ```
 
 ---
 
-## Quick Example
+# Quick Example
 
-```javascript
+```javascript id="xgqz2e"
 import azios from "aziosxjs";
 
 async function getUsers() {
@@ -53,7 +72,7 @@ getUsers();
 
 ## GET Request
 
-```javascript
+```javascript id="q2s48a"
 const res = await azios.get("https://api.example.com/users");
 
 console.log(res.data);
@@ -63,7 +82,7 @@ console.log(res.data);
 
 ## POST Request
 
-```javascript
+```javascript id="ys8fr0"
 const res = await azios.post(
   "https://api.example.com/login",
   {
@@ -79,9 +98,9 @@ console.log(res.data);
 
 # Query Parameters
 
-Azios automatically serializes query parameters.
+Aziosxjs automatically serializes query parameters.
 
-```javascript
+```javascript id="6e6w1q"
 const res = await azios.get(
   "https://jsonplaceholder.typicode.com/posts",
   {
@@ -94,7 +113,7 @@ console.log(res.data);
 
 Generated URL:
 
-```
+```id="2dq3rc"
 /posts?_limit=2
 ```
 
@@ -106,12 +125,12 @@ Interceptors allow you to modify requests or responses globally.
 
 ## Request Interceptor
 
-```javascript
+```javascript id="o7j8rz"
 azios.interceptors.request.use(config => {
   console.log("Request intercepted");
 
   if (!config.headers) config.headers = {};
-  config.headers["x-test"] = "azios";
+  config.headers["x-client"] = "aziosxjs";
 
   return config;
 });
@@ -121,7 +140,7 @@ azios.interceptors.request.use(config => {
 
 ## Response Interceptor
 
-```javascript
+```javascript id="w7r0uj"
 azios.interceptors.response.use(response => {
   console.log("Response intercepted");
   return response;
@@ -132,9 +151,9 @@ azios.interceptors.response.use(response => {
 
 # Request Cancellation
 
-Azios supports request cancellation using `AbortController`.
+Requests can be cancelled using `AbortController`.
 
-```javascript
+```javascript id="68f4s3"
 const controller = new AbortController();
 
 azios.get(
@@ -145,45 +164,93 @@ azios.get(
 controller.abort();
 ```
 
-When aborted, Azios throws a structured error with code:
+If aborted, Aziosxjs throws an error with code:
 
-```
+```id="m5ktg3"
 ABORTED
 ```
 
 ---
 
-# Error Handling
+# Retry System
 
-Azios returns standardized error objects.
+Aziosxjs can automatically retry failed requests.
 
-```javascript
-try {
-  await azios.get("https://wrong-url.test");
-} catch (error) {
-  console.log(error.name);     // AziosError
-  console.log(error.code);     // NETWORK_ERROR
-}
+```javascript id="zwdg7p"
+await azios.get("https://api.example.com/users", {
+  retry: 3
+});
 ```
 
-Structured errors make debugging easier.
+Retries use **exponential backoff** to avoid overwhelming servers.
 
 ---
 
-# Architecture Overview
+# Response Caching
 
-Azios follows a modular request pipeline.
+Responses can be cached in memory.
 
+```javascript id="hjbrgx"
+await azios.get(
+  "https://api.example.com/users",
+  { cache: true }
+);
 ```
+
+Subsequent requests may return cached responses instantly.
+
+---
+
+# Rate Limiting
+
+Control the number of concurrent requests.
+
+```javascript id="m2l4x9"
+await azios.get(
+  "https://api.example.com/users",
+  { rateLimit: 3 }
+);
+```
+
+Only 3 requests will execute simultaneously.
+
+---
+
+# Error Handling
+
+Aziosxjs returns standardized error objects.
+
+```javascript id="n2d3kr"
+try {
+  await azios.get("https://invalid-url.test");
+} catch (error) {
+  console.log(error.name); // AziosError
+  console.log(error.code); // NETWORK_ERROR
+}
+```
+
+This makes debugging significantly easier.
+
+---
+
+# Request Pipeline Architecture
+
+Aziosxjs follows a modular pipeline design.
+
+```id="m2b3ux"
 User Code
    ↓
 Azios Instance
    ↓
 Request Interceptors
    ↓
+Retry Engine
+   ↓
+Rate Limiter
+   ↓
 dispatchRequest (HTTP engine)
    ↓
-Node.js http/https modules
+Node.js http / https
    ↓
 Response Interceptors
    ↓
@@ -194,12 +261,19 @@ Return Response
 
 # Project Structure
 
-```
+```id="v2z3go"
 src
  ├── core
  │    ├── Azios.ts
  │    ├── createInstance.ts
- │    └── dispatchRequest.ts
+ │    ├── dispatchRequest.ts
+ │    └── requestStore.ts
+ │
+ ├── cache
+ │    └── memoryCache.ts
+ │
+ ├── rateLimiter
+ │    └── rateLimiter.ts
  │
  ├── interceptors
  │    └── InterceptorManager.ts
@@ -222,38 +296,43 @@ src
 
 # Version Roadmap
 
-## v0.1
+### v0.1
 
 * Core HTTP client
 * Instances
 * JSON handling
-* Basic request configuration
+* Request configuration
 
-## v0.2
+### v0.2
 
 * Interceptor pipeline
 * Structured error system
 * Request cancellation
-* Query parameter serializer
+* Query parameter serialization
 
-## Upcoming
-
-Future improvements planned:
+### v0.3
 
 * Retry mechanism
+* Exponential backoff
 * Request deduplication
-* Built-in caching
+
+### v0.4
+
+* Response caching
 * Rate limiting
+
+### Planned
+
 * Plugin system
-* Middleware ecosystem
+* Middleware pipeline
+* Advanced TypeScript inference
+* Universal runtime support (Node, Browser, Edge)
 
 ---
 
 # Contributing
 
 Contributions are welcome.
-
-If you'd like to improve Aziosxjs:
 
 1. Fork the repository
 2. Create a feature branch

@@ -9,6 +9,9 @@ import AziosError from "../errors/AziosError"
 
 import { getPending, setPending, removePending } from "./requestStore"
 
+import { getCache, setCache } from "../cache/memoryCache"
+import { schedule } from "../rateLimiter/rateLimiter"
+
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -126,6 +129,24 @@ export default async function dispatchRequest(config: AziosRequestConfig) {
   const requestKey =
     `${config.method}-${config.url}-${JSON.stringify(config.params)}`
 
+  // -------------------------
+  // CACHE CHECK (Sprint 4)
+  // -------------------------
+
+  if (config.cache) {
+
+    const cached = getCache(requestKey)
+
+    if (cached) {
+      return cached
+    }
+
+  }
+
+  // -------------------------
+  // DEDUPLICATION (Sprint 3)
+  // -------------------------
+
   const existing = getPending(requestKey)
 
   if (existing) {
@@ -143,7 +164,19 @@ export default async function dispatchRequest(config: AziosRequestConfig) {
 
       try {
 
-        const response = await makeRequest(config)
+        const task = () => makeRequest(config)
+
+        const response = config.rateLimit
+          ? await schedule(task, config.rateLimit)
+          : await task()
+
+        // -------------------------
+        // CACHE STORE
+        // -------------------------
+
+        if (config.cache) {
+          setCache(requestKey, response)
+        }
 
         removePending(requestKey)
 
