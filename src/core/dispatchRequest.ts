@@ -8,7 +8,6 @@ import buildURL from "../helpers/buildURL"
 import AziosError from "../errors/AziosError"
 
 import { getPending, setPending, removePending } from "./requestStore"
-
 import { getCache, setCache } from "../cache/memoryCache"
 import { schedule } from "../rateLimiter/rateLimiter"
 
@@ -37,7 +36,6 @@ async function makeRequest(config: AziosRequestConfig): Promise<AziosResponse> {
       port: parsedURL.port || (isHttps ? 443 : 80),
       path: parsedURL.pathname + parsedURL.search,
       method: config.method || "GET",
-
       headers: {
         "Content-Type": "application/json",
         ...config.headers
@@ -46,9 +44,32 @@ async function makeRequest(config: AziosRequestConfig): Promise<AziosResponse> {
 
     const req = transport.request(options, res => {
 
+      // -------------------------
+      // TIMEOUT SUPPORT
+      // -------------------------
+      if (config.timeout) {
+        req.setTimeout(config.timeout, () => {
+
+          req.destroy()
+
+          reject(
+            new AziosError(
+              "Request timeout",
+              "TIMEOUT",
+              config,
+              req
+            )
+          )
+
+        })
+      }
+
+      // -------------------------
+      // ABORT SUPPORT
+      // -------------------------
       if (config.signal) {
 
-        config.signal.addEventListener("abort", () => {
+        const abortHandler = () => {
 
           req.destroy()
 
@@ -61,7 +82,9 @@ async function makeRequest(config: AziosRequestConfig): Promise<AziosResponse> {
             )
           )
 
-        })
+        }
+
+        config.signal.addEventListener("abort", abortHandler, { once: true })
 
       }
 
@@ -175,7 +198,7 @@ export default async function dispatchRequest(config: AziosRequestConfig) {
         // -------------------------
 
         if (config.cache) {
-          setCache(requestKey, response)
+          setCache(requestKey, response, config.cacheTTL ?? 5000)
         }
 
         removePending(requestKey)
