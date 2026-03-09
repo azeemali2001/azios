@@ -11,11 +11,13 @@ export function createInstance(config: AziosRequestConfig): AziosInstance {
   Object.getOwnPropertyNames(Azios.prototype).forEach(method => {
 
     if (method !== "constructor") {
-      (instance as any)[method] = (Azios.prototype as any)[method].bind(context)
+      ;(instance as any)[method] = (Azios.prototype as any)[method].bind(context)
     }
 
   })
 
-  return instance
+  // attach interceptors
+  instance.interceptors = context.interceptors
 
+  return instance
 }

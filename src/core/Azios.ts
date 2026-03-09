@@ -25,7 +25,31 @@ export default class Azios {
 
     config = { ...this.defaults, ...config }
 
-    return dispatchRequest(config)
+    const chain: any[] = []
+
+    this.interceptors.request.forEach(interceptor => {
+      chain.unshift(interceptor.fulfilled, interceptor.rejected)
+    })
+
+    chain.push(dispatchRequest, undefined)
+
+    this.interceptors.response.forEach(interceptor => {
+      chain.push(interceptor.fulfilled, interceptor.rejected)
+    })
+
+    let promise = Promise.resolve(config)
+
+    while (chain.length) {
+
+      const fulfilled = chain.shift()
+      const rejected = chain.shift()
+
+      promise = promise.then(fulfilled, rejected)
+
+    }
+
+    return promise
+
   }
 
   get(url: string, config?: AziosRequestConfig) {
@@ -49,54 +73,54 @@ export default class Azios {
 
   put(url: string, data?: any, config?: AziosRequestConfig) {
 
-  return this.request({
-    ...config,
-    method: "PUT",
-    url,
-    data
-  })
+    return this.request({
+      ...config,
+      method: "PUT",
+      url,
+      data
+    })
 
-}
+  }
 
-patch(url: string, data?: any, config?: AziosRequestConfig) {
+  patch(url: string, data?: any, config?: AziosRequestConfig) {
 
-  return this.request({
-    ...config,
-    method: "PATCH",
-    url,
-    data
-  })
+    return this.request({
+      ...config,
+      method: "PATCH",
+      url,
+      data
+    })
 
-}
+  }
 
-delete(url: string, config?: AziosRequestConfig) {
+  delete(url: string, config?: AziosRequestConfig) {
 
-  return this.request({
-    ...config,
-    method: "DELETE",
-    url
-  })
+    return this.request({
+      ...config,
+      method: "DELETE",
+      url
+    })
 
-}
+  }
 
-head(url: string, config?: AziosRequestConfig) {
+  head(url: string, config?: AziosRequestConfig) {
 
-  return this.request({
-    ...config,
-    method: "HEAD",
-    url
-  })
+    return this.request({
+      ...config,
+      method: "HEAD",
+      url
+    })
 
-}
+  }
 
-options(url: string, config?: AziosRequestConfig) {
+  options(url: string, config?: AziosRequestConfig) {
 
-  return this.request({
-    ...config,
-    method: "OPTIONS",
-    url
-  })
+    return this.request({
+      ...config,
+      method: "OPTIONS",
+      url
+    })
 
-}
+  }
 
 }
