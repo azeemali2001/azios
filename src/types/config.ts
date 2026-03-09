@@ -7,4 +7,5 @@ export interface AziosRequestConfig {
   data?: any
   timeout?: number
   responseType?: string
+  signal?: AbortSignal
 }

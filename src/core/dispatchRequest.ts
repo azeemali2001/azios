@@ -5,6 +5,7 @@ import { URL } from "url"
 import { AziosRequestConfig } from "../types/config"
 import { AziosResponse } from "../types/response"
 import buildURL from "../helpers/buildURL"
+import AziosError from "../errors/AziosError"
 
 export default function dispatchRequest(config: AziosRequestConfig) {
 
@@ -37,6 +38,25 @@ export default function dispatchRequest(config: AziosRequestConfig) {
     }
 
     const req = transport.request(options, res => {
+      // Cancellation support
+      if (config.signal) {
+
+        config.signal.addEventListener("abort", () => {
+
+          req.destroy()
+
+          reject(
+            new AziosError(
+              "Request aborted",
+              "ABORTED",
+              config,
+              req
+            )
+          )
+
+        })
+
+      }
 
       let rawData = ""
 
@@ -71,7 +91,16 @@ export default function dispatchRequest(config: AziosRequestConfig) {
     })
 
     req.on("error", err => {
-      reject(err)
+
+      reject(
+        new AziosError(
+          err.message,
+          "NETWORK_ERROR",
+          config,
+          req
+        )
+      )
+
     })
 
     // Send request body

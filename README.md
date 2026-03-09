@@ -2,9 +2,9 @@
 
 A lightweight HTTP client for Node.js inspired by Axios.
 
-Aziosxjs provides a simple and clean API for making HTTP requests while keeping the internal architecture modular and extensible.
+Aziosxjs provides a clean and minimal API for making HTTP requests while exposing the internal request pipeline architecture. It is built using Node.js low-level `http` and `https` modules to demonstrate how modern HTTP client libraries work internally.
 
-This project was built to explore how HTTP client libraries like Axios work internally, including request pipelines, interceptors, and adapter-based networking.
+This project focuses on simplicity, extensibility, and educational value while still providing practical features.
 
 ---
 
@@ -13,17 +13,19 @@ This project was built to explore how HTTP client libraries like Axios work inte
 * Simple and clean API
 * Promise-based HTTP requests
 * Built using low-level Node.js `http` and `https` modules
-* Interceptor system for request/response manipulation
+* Request and response interceptors
+* Structured error system
+* Request cancellation support
+* Query parameter serialization
+* Automatic JSON parsing
 * TypeScript support
-* Modular architecture for future extensions
+* Modular architecture
 
 ---
 
 ## Installation
 
-Install the package using npm:
-
-```
+```bash
 npm install aziosxjs
 ```
 
@@ -47,9 +49,9 @@ getUsers();
 
 ---
 
-## Basic Usage
+# Basic Usage
 
-### GET Request
+## GET Request
 
 ```javascript
 const res = await azios.get("https://api.example.com/users");
@@ -59,7 +61,7 @@ console.log(res.data);
 
 ---
 
-### POST Request
+## POST Request
 
 ```javascript
 const res = await azios.post(
@@ -75,22 +77,49 @@ console.log(res.data);
 
 ---
 
-## Interceptors
+# Query Parameters
+
+Azios automatically serializes query parameters.
+
+```javascript
+const res = await azios.get(
+  "https://jsonplaceholder.typicode.com/posts",
+  {
+    params: { _limit: 2 }
+  }
+);
+
+console.log(res.data);
+```
+
+Generated URL:
+
+```
+/posts?_limit=2
+```
+
+---
+
+# Interceptors
 
 Interceptors allow you to modify requests or responses globally.
 
-### Request Interceptor
+## Request Interceptor
 
 ```javascript
 azios.interceptors.request.use(config => {
   console.log("Request intercepted");
+
+  if (!config.headers) config.headers = {};
+  config.headers["x-test"] = "azios";
+
   return config;
 });
 ```
 
 ---
 
-### Response Interceptor
+## Response Interceptor
 
 ```javascript
 azios.interceptors.response.use(response => {
@@ -101,9 +130,49 @@ azios.interceptors.response.use(response => {
 
 ---
 
-## Architecture Overview
+# Request Cancellation
 
-Aziosxjs follows a modular architecture:
+Azios supports request cancellation using `AbortController`.
+
+```javascript
+const controller = new AbortController();
+
+azios.get(
+  "https://jsonplaceholder.typicode.com/users",
+  { signal: controller.signal }
+);
+
+controller.abort();
+```
+
+When aborted, Azios throws a structured error with code:
+
+```
+ABORTED
+```
+
+---
+
+# Error Handling
+
+Azios returns standardized error objects.
+
+```javascript
+try {
+  await azios.get("https://wrong-url.test");
+} catch (error) {
+  console.log(error.name);     // AziosError
+  console.log(error.code);     // NETWORK_ERROR
+}
+```
+
+Structured errors make debugging easier.
+
+---
+
+# Architecture Overview
+
+Azios follows a modular request pipeline.
 
 ```
 User Code
@@ -123,7 +192,7 @@ Return Response
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```
 src
@@ -138,6 +207,9 @@ src
  ├── errors
  │    └── AziosError.ts
  │
+ ├── helpers
+ │    └── buildURL.ts
+ │
  ├── types
  │    ├── config.ts
  │    ├── request.ts
@@ -148,31 +220,53 @@ src
 
 ---
 
-## Roadmap
+# Version Roadmap
+
+## v0.1
+
+* Core HTTP client
+* Instances
+* JSON handling
+* Basic request configuration
+
+## v0.2
+
+* Interceptor pipeline
+* Structured error system
+* Request cancellation
+* Query parameter serializer
+
+## Upcoming
 
 Future improvements planned:
 
-* Interceptor execution pipeline
-* Automatic JSON parsing
-* Retry strategy
+* Retry mechanism
 * Request deduplication
-* Caching layer
+* Built-in caching
+* Rate limiting
 * Plugin system
+* Middleware ecosystem
 
 ---
 
-## Contributing
+# Contributing
 
-Contributions are welcome. Feel free to open issues or submit pull requests.
+Contributions are welcome.
+
+If you'd like to improve Aziosxjs:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
 ---
 
-## Author
+# Author
 
 Azeem Ali
 
 ---
 
-## License
+# License
 
 MIT
