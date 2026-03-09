@@ -1,18 +1,15 @@
 {
   "name": "aziosxjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lightweight HTTP client inspired by axios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-
   "scripts": {
     "build": "tsc"
   },
-
   "files": [
     "dist"
   ],
-
   "keywords": [
     "http",
     "client",
@@ -20,17 +17,13 @@
     "request",
     "nodejs"
   ],
-
   "author": "Azeem Ali",
   "license": "MIT",
-
   "repository": {
     "type": "git",
     "url": "https://github.com/azeemali2001/aziosxjs"
   },
-
   "homepage": "https://github.com/azeemali2001/aziosxjs",
-
   "bugs": {
     "url": "https://github.com/azeemali2001/aziosxjs/issues"
   }
