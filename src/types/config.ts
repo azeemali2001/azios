@@ -8,4 +8,6 @@ export interface AziosRequestConfig {
   timeout?: number
   responseType?: string
   signal?: AbortSignal
+  retry?: number
+  retryDelay?: number
 }

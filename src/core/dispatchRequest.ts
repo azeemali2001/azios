@@ -7,16 +7,20 @@ import { AziosResponse } from "../types/response"
 import buildURL from "../helpers/buildURL"
 import AziosError from "../errors/AziosError"
 
-export default function dispatchRequest(config: AziosRequestConfig) {
+import { getPending, setPending, removePending } from "./requestStore"
 
-  return new Promise<AziosResponse>((resolve, reject) => {
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
-    // Build full URL
+async function makeRequest(config: AziosRequestConfig): Promise<AziosResponse> {
+
+  return new Promise((resolve, reject) => {
+
     let url = config.baseURL
       ? config.baseURL + config.url
       : config.url
 
-    // Add query parameters
     url = buildURL(url!, config.params)
 
     const parsedURL = new URL(url!)
@@ -38,7 +42,7 @@ export default function dispatchRequest(config: AziosRequestConfig) {
     }
 
     const req = transport.request(options, res => {
-      // Cancellation support
+
       if (config.signal) {
 
         config.signal.addEventListener("abort", () => {
@@ -68,12 +72,9 @@ export default function dispatchRequest(config: AziosRequestConfig) {
 
         let responseData: any = rawData
 
-        // Automatic JSON parsing
         try {
           responseData = JSON.parse(rawData)
-        } catch {
-          // leave as string if not JSON
-        }
+        } catch {}
 
         const response: AziosResponse = {
           data: responseData,
@@ -103,7 +104,6 @@ export default function dispatchRequest(config: AziosRequestConfig) {
 
     })
 
-    // Send request body
     if (config.data) {
 
       const body =
@@ -118,5 +118,61 @@ export default function dispatchRequest(config: AziosRequestConfig) {
     req.end()
 
   })
+
+}
+
+export default async function dispatchRequest(config: AziosRequestConfig) {
+
+  const requestKey =
+    `${config.method}-${config.url}-${JSON.stringify(config.params)}`
+
+  const existing = getPending(requestKey)
+
+  if (existing) {
+    return existing
+  }
+
+  const retries = config.retry || 0
+  const retryDelay = config.retryDelay || 300
+
+  let attempt = 0
+
+  const promise = (async () => {
+
+    while (true) {
+
+      try {
+
+        const response = await makeRequest(config)
+
+        removePending(requestKey)
+
+        return response
+
+      } catch (err) {
+
+        if (attempt >= retries) {
+
+          removePending(requestKey)
+
+          throw err
+
+        }
+
+        attempt++
+
+        const backoff = retryDelay * Math.pow(2, attempt)
+
+        await delay(backoff)
+
+      }
+
+    }
+
+  })()
+
+  setPending(requestKey, promise)
+
+  return promise
 
 }
