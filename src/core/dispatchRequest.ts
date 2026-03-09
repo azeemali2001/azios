@@ -4,41 +4,59 @@ import { URL } from "url"
 
 import { AziosRequestConfig } from "../types/config"
 import { AziosResponse } from "../types/response"
+import buildURL from "../helpers/buildURL"
 
 export default function dispatchRequest(config: AziosRequestConfig) {
 
   return new Promise<AziosResponse>((resolve, reject) => {
 
-    const fullURL = config.baseURL
+    // Build full URL
+    let url = config.baseURL
       ? config.baseURL + config.url
       : config.url
 
-    const parsedURL = new URL(fullURL!)
+    // Add query parameters
+    url = buildURL(url!, config.params)
+
+    const parsedURL = new URL(url!)
 
     const isHttps = parsedURL.protocol === "https:"
+
+    const transport = isHttps ? https : http
 
     const options = {
       hostname: parsedURL.hostname,
       port: parsedURL.port || (isHttps ? 443 : 80),
       path: parsedURL.pathname + parsedURL.search,
       method: config.method || "GET",
-      headers: config.headers || {}
-    }
 
-    const transport = isHttps ? https : http
+      headers: {
+        "Content-Type": "application/json",
+        ...config.headers
+      }
+    }
 
     const req = transport.request(options, res => {
 
-      let data = ""
+      let rawData = ""
 
       res.on("data", chunk => {
-        data += chunk
+        rawData += chunk
       })
 
       res.on("end", () => {
 
+        let responseData: any = rawData
+
+        // Automatic JSON parsing
+        try {
+          responseData = JSON.parse(rawData)
+        } catch {
+          // leave as string if not JSON
+        }
+
         const response: AziosResponse = {
-          data: data,
+          data: responseData,
           status: res.statusCode || 0,
           statusText: res.statusMessage || "",
           headers: res.headers,
@@ -56,8 +74,16 @@ export default function dispatchRequest(config: AziosRequestConfig) {
       reject(err)
     })
 
+    // Send request body
     if (config.data) {
-      req.write(JSON.stringify(config.data))
+
+      const body =
+        typeof config.data === "string"
+          ? config.data
+          : JSON.stringify(config.data)
+
+      req.write(body)
+
     }
 
     req.end()

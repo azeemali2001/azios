@@ -21,10 +21,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/azeemali2001/aziosxjs"
+    "url": "https://github.com/azeemali2001/azios"
   },
-  "homepage": "https://github.com/azeemali2001/aziosxjs",
+  "homepage": "https://github.com/azeemali2001/azios",
   "bugs": {
-    "url": "https://github.com/azeemali2001/aziosxjs/issues"
+    "url": "https://github.com/azeemali2001/azios/issues"
   }
 }

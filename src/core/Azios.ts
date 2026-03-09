@@ -47,4 +47,56 @@ export default class Azios {
     })
   }
 
+  put(url: string, data?: any, config?: AziosRequestConfig) {
+
+  return this.request({
+    ...config,
+    method: "PUT",
+    url,
+    data
+  })
+
+}
+
+patch(url: string, data?: any, config?: AziosRequestConfig) {
+
+  return this.request({
+    ...config,
+    method: "PATCH",
+    url,
+    data
+  })
+
+}
+
+delete(url: string, config?: AziosRequestConfig) {
+
+  return this.request({
+    ...config,
+    method: "DELETE",
+    url
+  })
+
+}
+
+head(url: string, config?: AziosRequestConfig) {
+
+  return this.request({
+    ...config,
+    method: "HEAD",
+    url
+  })
+
+}
+
+options(url: string, config?: AziosRequestConfig) {
+
+  return this.request({
+    ...config,
+    method: "OPTIONS",
+    url
+  })
+
+}
+
 }
