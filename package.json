@@ -1,22 +1,37 @@
 {
-  "name": "azios",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "example": "examples",
-    "test": "tests"
-  },
+  "name": "aziosxjs",
+  "version": "0.1.0",
+  "description": "Lightweight HTTP client inspired by axios",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^25.4.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+
+  "files": [
+    "dist"
+  ],
+
+  "keywords": [
+    "http",
+    "client",
+    "axios",
+    "request",
+    "nodejs"
+  ],
+
+  "author": "Azeem Ali",
+  "license": "MIT",
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azeemali2001/aziosxjs"
+  },
+
+  "homepage": "https://github.com/azeemali2001/aziosxjs",
+
+  "bugs": {
+    "url": "https://github.com/azeemali2001/aziosxjs/issues"
   }
 }
