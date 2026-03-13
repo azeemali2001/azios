@@ -1,4 +1,9 @@
-const cache = new Map<string, { data: any, expiry: number }>()
+type CacheEntry = {
+  data: any
+  expiry: number
+}
+
+const cache = new Map<string, CacheEntry>()
 
 export function getCache(key: string) {
 
@@ -6,6 +11,7 @@ export function getCache(key: string) {
 
   if (!entry) return null
 
+  // remove expired cache
   if (Date.now() > entry.expiry) {
     cache.delete(key)
     return null
@@ -15,15 +21,25 @@ export function getCache(key: string) {
 
 }
 
-export function setCache(key: string, value: any, ttl = 5000) {
+export function setCache(
+  key: string,
+  value: any,
+  ttl: number = 5000
+) {
+
+  const expiry = Date.now() + ttl
 
   cache.set(key, {
     data: value,
-    expiry: Date.now() + ttl
+    expiry
   })
 
 }
 
 export function clearCache(key: string) {
-  cache.delete(key);
+  cache.delete(key)
+}
+
+export function clearAllCache() {
+  cache.clear()
 }

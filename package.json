@@ -1,21 +1,37 @@
 {
   "name": "aziosxjs",
-  "version": "0.4.1",
-  "description": "Lightweight HTTP client inspired by axios",
+  "version": "0.5.0",
+  "description": "Lightweight, predictable HTTP client with plugins, middleware, and universal runtime support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "ts-node tests/all.test.ts",
+    "test:sprint1": "ts-node examples/sprint2.ts",
+    "test:sprint2": "ts-node examples/sprint2.ts",
+    "test:sprint3": "ts-node examples/sprint3.ts",
+    "test:sprint4": "ts-node examples/sprint4.ts",
+    "test:sprint5:plugins": "ts-node examples/sprint5-plugins.ts",
+    "test:sprint5:middleware": "ts-node examples/sprint5-middleware.ts",
+    "test:sprint7": "ts-node examples/sprint7-universal.ts",
+    "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "keywords": [
     "http",
     "client",
     "axios",
     "request",
-    "nodejs"
+    "nodejs",
+    "browser",
+    "universal",
+    "plugin",
+    "middleware",
+    "lightweight",
+    "typescript"
   ],
   "author": "Azeem Ali",
   "license": "MIT",
@@ -26,5 +42,8 @@
   "homepage": "https://github.com/azeemali2001/azios",
   "bugs": {
     "url": "https://github.com/azeemali2001/azios/issues"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
   }
 }

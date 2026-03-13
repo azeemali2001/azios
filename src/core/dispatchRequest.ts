@@ -1,150 +1,27 @@
-import http from "http"
-import https from "https"
-import { URL } from "url"
-
 import { AziosRequestConfig } from "../types/config"
 import { AziosResponse } from "../types/response"
 import buildURL from "../helpers/buildURL"
 import AziosError from "../errors/AziosError"
+import AdapterFactory from "../runtimes/AdapterFactory"
 
 import { getPending, setPending, removePending } from "./requestStore"
 import { getCache, setCache } from "../cache/memoryCache"
 import { schedule } from "../rateLimiter/rateLimiter"
 
-function delay(ms: number) {
+/**
+ * Sleep utility for retry delays
+ */
+function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * Make a single HTTP request using the universal adapter
+ * This ensures cross-runtime compatibility
+ */
 async function makeRequest(config: AziosRequestConfig): Promise<AziosResponse> {
-
-  return new Promise((resolve, reject) => {
-
-    let url = config.baseURL
-      ? config.baseURL + config.url
-      : config.url
-
-    url = buildURL(url!, config.params)
-
-    const parsedURL = new URL(url!)
-
-    const isHttps = parsedURL.protocol === "https:"
-
-    const transport = isHttps ? https : http
-
-    const options = {
-      hostname: parsedURL.hostname,
-      port: parsedURL.port || (isHttps ? 443 : 80),
-      path: parsedURL.pathname + parsedURL.search,
-      method: config.method || "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...config.headers
-      }
-    }
-
-    const req = transport.request(options, res => {
-
-      // -------------------------
-      // TIMEOUT SUPPORT
-      // -------------------------
-      if (config.timeout) {
-        req.setTimeout(config.timeout, () => {
-
-          req.destroy()
-
-          reject(
-            new AziosError(
-              "Request timeout",
-              "TIMEOUT",
-              config,
-              req
-            )
-          )
-
-        })
-      }
-
-      // -------------------------
-      // ABORT SUPPORT
-      // -------------------------
-      if (config.signal) {
-
-        const abortHandler = () => {
-
-          req.destroy()
-
-          reject(
-            new AziosError(
-              "Request aborted",
-              "ABORTED",
-              config,
-              req
-            )
-          )
-
-        }
-
-        config.signal.addEventListener("abort", abortHandler, { once: true })
-
-      }
-
-      let rawData = ""
-
-      res.on("data", chunk => {
-        rawData += chunk
-      })
-
-      res.on("end", () => {
-
-        let responseData: any = rawData
-
-        try {
-          responseData = JSON.parse(rawData)
-        } catch {}
-
-        const response: AziosResponse = {
-          data: responseData,
-          status: res.statusCode || 0,
-          statusText: res.statusMessage || "",
-          headers: res.headers,
-          config,
-          request: req
-        }
-
-        resolve(response)
-
-      })
-
-    })
-
-    req.on("error", err => {
-
-      reject(
-        new AziosError(
-          err.message,
-          "NETWORK_ERROR",
-          config,
-          req
-        )
-      )
-
-    })
-
-    if (config.data) {
-
-      const body =
-        typeof config.data === "string"
-          ? config.data
-          : JSON.stringify(config.data)
-
-      req.write(body)
-
-    }
-
-    req.end()
-
-  })
-
+  const adapter = AdapterFactory.getAdapter()
+  return adapter.request(config)
 }
 
 export default async function dispatchRequest(config: AziosRequestConfig) {

@@ -1,6 +1,8 @@
 import { AziosRequestConfig } from "./config"
 import { AziosResponse } from "./response"
 import InterceptorManager from "../interceptors/InterceptorManager"
+import type { AziosPlugin } from "./plugin"
+import type { AziosMiddleware } from "./middleware"
 
 export interface AziosInstance {
 
@@ -26,5 +28,12 @@ export interface AziosInstance {
     request: InterceptorManager<AziosRequestConfig>
     response: InterceptorManager<AziosResponse>
   }
+
+  // Plugin system
+  installPlugin(plugin: AziosPlugin): Promise<void>
+  uninstallPlugin(name: string): Promise<void>
+
+  // Middleware system
+  use(middleware: AziosMiddleware): void
 
 }
