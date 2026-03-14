@@ -7,13 +7,16 @@
   "scripts": {
     "build": "tsc",
     "test": "ts-node tests/all.test.ts",
-    "test:sprint1": "ts-node examples/sprint2.ts",
-    "test:sprint2": "ts-node examples/sprint2.ts",
-    "test:sprint3": "ts-node examples/sprint3.ts",
-    "test:sprint4": "ts-node examples/sprint4.ts",
+    "test:sprint1": "ts-node tests/all.test.ts --sprint=1",
+    "test:sprint2": "ts-node tests/all.test.ts --sprint=2",
+    "test:sprint3": "ts-node tests/all.test.ts --sprint=3",
+    "test:sprint4": "ts-node tests/all.test.ts --sprint=4",
+    "test:sprint5": "ts-node tests/all.test.ts --sprint=5",
+    "test:sprint6": "ts-node tests/all.test.ts --sprint=6",
+    "test:sprint7": "ts-node tests/all.test.ts --sprint=7",
     "test:sprint5:plugins": "ts-node examples/sprint5-plugins.ts",
     "test:sprint5:middleware": "ts-node examples/sprint5-middleware.ts",
-    "test:sprint7": "ts-node examples/sprint7-universal.ts",
+    "test:sprint7:legacy": "ts-node examples/sprint7-universal.ts",
     "prepublishOnly": "npm run build"
   },
   "files": [

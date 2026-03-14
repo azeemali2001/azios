@@ -3,8 +3,39 @@
  * Tests all sprints including plugins, middleware, and universal runtime
  */
 
-import azios from "../src"
-import type { AziosPlugin, AziosResponse } from "../src/types"
+import azios, { detectRuntime, RuntimeType } from "../src"
+import type { AziosInstance, AziosPlugin, AziosResponse } from "../src/types"
+
+// ============================================
+// CLI Args
+// ============================================
+
+/**
+ * Supports:
+ *   npm test -- --sprint=2
+ *   node tests/all.test.ts --sprint 2
+ *   node tests/all.test.ts --sprints=1,3
+ */
+function parseSprintsArg(): number[] | null {
+  const args = process.argv.slice(2)
+
+  const sprintArgIndex = args.findIndex((arg) =>
+    ["--sprint", "--sprints", "-s"].some((flag) => arg.startsWith(flag))
+  )
+
+  if (sprintArgIndex === -1) return null
+
+  const sprintArg = args[sprintArgIndex]
+  const [, value] = sprintArg.split("=")
+  const raw = value ?? args[sprintArgIndex + 1]
+
+  if (!raw) return null
+
+  return raw
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 7)
+}
 
 // ============================================
 // Test Utilities
@@ -268,7 +299,7 @@ async function testSprint5() {
     const testInstance = azios
     testInstance.use(testMiddleware)
 
-    const response = await testInstance.get("https://jsonplaceholder.typicode.com/users/1")
+    const response = await azios.get("https://jsonplaceholder.typicode.com/users/1")
 
     if (!middlewareCalled) {
       throw new Error("Middleware was not called")
@@ -277,22 +308,88 @@ async function testSprint5() {
 }
 
 // ============================================
-// Main Test Execution
+// Sprint 6 - TypeScript DX Tests
 // ============================================
 
-async function runAllTests() {
+async function testSprint6() {
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  console.log("Sprint 6 - TypeScript DX")
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+  await test("TypeScript Type Exports", async () => {
+    // This is a compile-time check: if types are missing, this file will fail to compile.
+    type Expect<T extends true> = T
+    type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2)
+      ? true
+      : false
+
+    const _assertType: Expect<Equal<AziosInstance, typeof azios>> = true as const
+
+    // Prevent unused-variable pruning.
+    if (_assertType !== true) {
+      throw new Error("Type assertion failed")
+    }
+  })
+}
+
+// ============================================
+// Sprint 7 - Universal Runtime Tests
+// ============================================
+
+async function testSprint7() {
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  console.log("Sprint 7 - Universal Runtime")
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+  await test("Runtime Detection (Node)", async () => {
+    const runtime = detectRuntime()
+    if (runtime !== RuntimeType.Node) {
+      throw new Error(`Expected Node runtime, got ${runtime}`)
+    }
+  })
+}
+
+// ============================================
+// Sprint Selector
+// ============================================
+
+function getSprintRunners(selectedSprints: number[] | null) {
+  const runners: Array<() => Promise<void>> = []
+
+  const add = (sprint: number, fn: () => Promise<void>) => {
+    if (!selectedSprints || selectedSprints.includes(sprint)) {
+      runners.push(fn)
+    }
+  }
+
+  add(1, testSprint1)
+  add(2, testSprint2)
+  add(3, testSprint3)
+  add(4, testSprint4)
+  add(5, testSprint5)
+  add(6, testSprint6)
+  add(7, testSprint7)
+
+  return runners
+}
+
+async function runAllTests(selectedSprints: number[] | null = null) {
   console.log("\n")
   console.log("╔══════════════════════════════════════════════════════════════╗")
   console.log("║         AZIOS COMPREHENSIVE TEST SUITE                       ║")
-  console.log("║               Production-Grade Testing                        ║")
+  console.log("║               Production-Grade Testing                       ║")
   console.log("╚══════════════════════════════════════════════════════════════╝")
 
+  if (selectedSprints) {
+    console.log(`\nRunning selected sprint(s): ${selectedSprints.join(", ")}`)
+  }
+
+  const runners = getSprintRunners(selectedSprints)
+
   try {
-    await testSprint1()
-    await testSprint2()
-    await testSprint3()
-    await testSprint4()
-    await testSprint5()
+    for (const runner of runners) {
+      await runner()
+    }
   } catch (error) {
     console.error("Test execution error:", error)
   }
@@ -327,4 +424,4 @@ async function runAllTests() {
 }
 
 // Run tests
-runAllTests()
+runAllTests(parseSprintsArg())
