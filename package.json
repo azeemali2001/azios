@@ -1,6 +1,6 @@
 {
   "name": "aziosxjs",
-  "version": "0.4.1",
+  "version": "1.0.0",
   "description": "Lightweight, predictable HTTP client with plugins, middleware, and universal runtime support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
