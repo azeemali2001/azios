@@ -1,0 +1,38 @@
+# Development files
+src/
+examples/
+tests/
+*.test.ts
+*.spec.ts
+
+# Config files
+tsconfig.json
+.gitignore
+.git
+.github
+
+# Documentation
+README.md is included
+CHANGELOG.md is included
+
+# Editor config
+.vscode
+.editorconfig
+.prettierrc
+.eslintrc*
+
+# Node modules (installed fresh on npm install)
+node_modules/
+
+# Package manager files
+lib-cov
+*.lcov
+.nyc_output
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp

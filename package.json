@@ -14,7 +14,11 @@
     "test:sprint5:plugins": "ts-node examples/sprint5-plugins.ts",
     "test:sprint5:middleware": "ts-node examples/sprint5-middleware.ts",
     "test:sprint7": "ts-node examples/sprint7-universal.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=14"
   },
   "files": [
     "dist",
